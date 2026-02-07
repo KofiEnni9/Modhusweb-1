@@ -236,7 +236,7 @@ export default function Home() {
 
         {/* Scroll Arrow */}
         <div
-          className="absolute bottom-8 sm:bottom-12 left-1/2 -translate-x-1/2 z-10 cursor-pointer animate-fade-in-up-delay-3"
+          className="absolute bottom-8 sm:bottom-12 left-0 right-0 z-10 cursor-pointer animate-fade-in-up-delay-3 flex justify-center"
           onClick={scrollToDemo}
         >
           <div className="scroll-arrow-container flex flex-col items-center gap-2 px-5 py-3 rounded-full border-2 backdrop-blur-md transition-all hover:border-white/30"
@@ -265,7 +265,7 @@ export default function Home() {
               </span>
             </div>
             <h2 className={`text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 mb-5 ${roboto.className}`}>
-              Access AI Beyond Text
+              See What AI Can Create
             </h2>
             <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
               Generated from a simple text prompt using models available on Modhus

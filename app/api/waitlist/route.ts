@@ -38,9 +38,14 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      console.error('Supabase error:', error)
+      console.error('Supabase error:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      })
       return NextResponse.json(
-        { error: 'Failed to join waitlist. Please try again.' },
+        { error: 'Failed to join waitlist. Please try again.', details: error.message },
         { status: 500 }
       )
     }
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Waitlist signup error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

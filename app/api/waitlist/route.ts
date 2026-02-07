@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// In-memory storage for demo purposes
-// In production, use a database like PostgreSQL, MongoDB, or Supabase
-const waitlist: { email: string; timestamp: Date }[] = []
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,35 +21,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if email already exists
-    const exists = waitlist.find(entry => entry.email === email)
-    if (exists) {
+    // Insert email into Supabase waitlist table
+    const { data, error } = await supabase
+      .from('waitlist')
+      .insert([{ email }])
+      .select()
+
+    // Handle errors
+    if (error) {
+      // Check for unique constraint violation (duplicate email)
+      if (error.code === '23505') {
+        return NextResponse.json(
+          { error: 'Email already registered' },
+          { status: 409 }
+        )
+      }
+      
+      console.error('Supabase error:', error)
       return NextResponse.json(
-        { error: 'Email already registered' },
-        { status: 409 }
+        { error: 'Failed to join waitlist. Please try again.' },
+        { status: 500 }
       )
     }
 
-    // Add to waitlist
-    waitlist.push({
-      email,
-      timestamp: new Date(),
-    })
-
     console.log(`New waitlist signup: ${email}`)
-    console.log(`Total waitlist members: ${waitlist.length}`)
 
-    // TODO: In production, you would:
-    // 1. Save to database
-    // 2. Send confirmation email
-    // 3. Add to email marketing platform (e.g., Mailchimp, SendGrid)
-    // 4. Trigger analytics event
+    // Get total waitlist count
+    const { count } = await supabase
+      .from('waitlist')
+      .select('*', { count: 'exact', head: true })
 
     return NextResponse.json(
       { 
         success: true, 
         message: 'Successfully joined waitlist',
-        position: waitlist.length 
+        position: count || undefined,
+        data: data?.[0]
       },
       { status: 200 }
     )
@@ -65,13 +69,33 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optional: GET endpoint to retrieve waitlist count (admin only in production)
+// Optional: GET endpoint to retrieve waitlist count
 export async function GET() {
-  return NextResponse.json(
-    { 
-      count: waitlist.length,
-      message: 'Waitlist statistics' 
-    },
-    { status: 200 }
-  )
+  try {
+    const { count, error } = await supabase
+      .from('waitlist')
+      .select('*', { count: 'exact', head: true })
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch waitlist count' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(
+      { 
+        count: count || 0,
+        message: 'Waitlist statistics' 
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error fetching waitlist:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }

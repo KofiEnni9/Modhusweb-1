@@ -24,8 +24,9 @@ export async function POST(request: NextRequest) {
     // Insert email into Supabase waitlist table
     const { data, error } = await supabase
       .from('waitlist')
-      .insert([{ email }])
+      .insert({ email })
       .select()
+      .single()
 
     // Handle errors
     if (error) {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
         success: true, 
         message: 'Successfully joined waitlist',
         position: count || undefined,
-        data: data?.[0]
+        data
       },
       { status: 200 }
     )
